@@ -12,6 +12,7 @@ gunicorn
 pandas
 pymatgen
 pyyaml
+markdown2
 dash_elasticsearch_autosuggest==0.3.0
 
 -e git://github.com/vtshitoyan/dash-materialsintelligence#egg=dash_materialsintelligence
