@@ -1,7 +1,5 @@
 import os, json
 from os import environ
-
-# dash
 import dash
 import dash_auth
 import markdown2
@@ -9,16 +7,13 @@ import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 from flask import send_from_directory
-from matscholar.rest import Rester
-from matscholar.rest import MatScholarRestError
+from matscholar.rest import Rester, MatScholarRestError
 
-# apps
-from matscholar_web.view import mat2vec_app, materials_map_app, journal_suggestion_app, summary_app, \
-    search_app, extract_app, material_search_app
+from matscholar_web.view import summary_app, search_app, extract_app, material_search_app
 
 # callbacks
-from matscholar_web.callbacks import mat2vec_callbacks, materials_map_callbacks, summary_callbacks, \
-    material_search_callbacks, extract_callbacks, journal_suggestion_callbacks, search_callbacks
+from matscholar_web.callbacks import summary_callbacks, \
+    material_search_callbacks, extract_callbacks, search_callbacks
 
 """
 APP CONFIG
@@ -42,56 +37,11 @@ stylesheets_links = [html.Link(rel='stylesheet', href='/static/css/' + css) for 
 """
 VIEW
 """
-
-header_contianer = html.Div([
-    dcc.Location(id="url", refresh=False),
-    html.Img(
-        src="https://matscholar-web.s3-us-west-1.amazonaws.com/matscholar_logo+alpha.png",
-        style={
-            'width': '450px',
-            "display": "block",
-            'max-width': "100%",
-            "margin": "5px auto",
-        })],
-    id="header_container",
-    className="row")
-
-footer_contianer = html.Div([
-    html.Div(
-        [html.Span("Copyright © 2019 - "),
-         html.A("Materials Intelligence",
-                href="https://github.com/materialsintelligence",
-                target="_blank"),
-         html.Span(" | "),
-         html.A("About Matscholar",
-                href="https://github.com/materialsintelligence/matscholar-web",
-                target="_blank")],
-        className="row",
-        style={
-            "color": "grey",
-            "textAlign": "center"
-        }),
-    html.Span("Note: This is an alpha release of Matscholar for the purpose of collecting feedback."),
-    html.Div([html.A("Privacy Policy",
-                     href='https://www.iubenda.com/privacy-policy/55585319',
-                     target="_blank"),
-              html.Span(" | "),
-              html.A("Submit an Issue or Feature Request",
-                     href='https://github.com/materialsintelligence/matscholar-web/issues',
-                     target="_blank")], className="row")],
-    id="footer_container",
-    className="row",
-    style={
-        "color": "grey",
-        "textAlign": "center",
-        "width": "100%"}, )
+app_container = html.Div("", id="app_container")
 
 app.layout = html.Div([
     html.Div(stylesheets_links, style={"display": "none"}),
-    header_contianer,
-    # nav,
-    html.Div("", id="app_container"),
-    footer_contianer],
+    app_container],
     className='container',
     style={
         "maxWidth": "1600px",
@@ -103,8 +53,30 @@ app.layout = html.Div([
 CALLBACKS
 """
 
-
 # callbacks for loading different apps
+@app.callback(
+    Output('app_container', 'children'),
+    [Input('url', 'pathname')])
+def display_page(path):
+    path = str(path)
+    if path.startswith("/explore"):
+        return mat2vec_app.serve_layout()
+    elif path.startswith("/materials_map"):
+        return materials_map_app.layout
+    elif path.startswith("/search"):
+        return search_app.serve_layout(path)
+    elif path.startswith("/summary"):
+        return summary_app.serve_layout()
+    elif path.startswith("/extract"):
+        return extract_app.serve_layout()
+    elif path.startswith("/material_search"):
+        return material_search_app.serve_layout()
+    # elif path.startswith("/journal_suggestion"):
+    #     return journal_suggestion_app.layout
+    else:
+        return search_app.serve_layout(path)
+
+
 @app.callback(
     Output('app_container', 'children'),
     [Input('url', 'pathname')])
@@ -127,9 +99,11 @@ def get_robots():
     path = "robots.txt"
     return send_from_directory(static_folder, path)
 
+
 # setting the static path for about page
 @app.server.route('/about')
 def get_about():
     return markdown2.markdown_path(os.path.join(os.getcwd(), "README.md"))
+
 
 search_callbacks.bind(app)

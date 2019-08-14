@@ -68,7 +68,7 @@ def format_result(result):
                      )
 
     # Format the 2nd line "authors - journal, year" with ellipses for overflow
-    characters_remaining = 90 # max line length
+    characters_remaining = 120 # max line length
     characters_remaining -= 5 # spaces, '-', and ','
 
     year = result['year']
